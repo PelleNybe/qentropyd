@@ -46,6 +46,15 @@ class QiskitQrngSourceConfig(BaseModel):
     seed_simulator: int | None = None
 
 
+class HwrngSourceConfig(BaseModel):
+    """Configuration for Linux hardware RNG character device (/dev/hwrng, USB QRNG)."""
+
+    enabled: bool = False
+    name: str = "linux_hwrng"
+    device_path: str = "/dev/hwrng"
+    timeout_seconds: float = Field(default=5.0, gt=0.1, le=60.0)
+
+
 class MixerConfig(BaseModel):
     """Configuration for multi-source cryptographic XOR mixing."""
 
@@ -107,7 +116,9 @@ class QEntropydConfig(BaseModel):
     """Root configuration model for qentropyd."""
 
     anu_api: AnuApiSourceConfig = Field(default_factory=AnuApiSourceConfig)
+    extra_http_sources: list[AnuApiSourceConfig] = Field(default_factory=list)
     qiskit_qrng: QiskitQrngSourceConfig = Field(default_factory=QiskitQrngSourceConfig)
+    hwrng: HwrngSourceConfig = Field(default_factory=HwrngSourceConfig)
     mixer: MixerConfig = Field(default_factory=MixerConfig)
     nist_800_22: Nist80022Config = Field(default_factory=Nist80022Config)
     nist_800_90b: Nist80090BConfig = Field(default_factory=Nist80090BConfig)

@@ -1,6 +1,6 @@
 [Unit]
 Description=qentropyd - Self-Verifying Quantum Entropy Daemon (Paranoid Mode)
-Documentation=https://github.com/CoraxCoLAB/qentropyd
+Documentation=https://github.com/PelleNybe/qentropyd
 After=network-online.target
 Wants=network-online.target
 

@@ -14,8 +14,8 @@ sudo systemctl enable --now qentropyd.service
 ## CLI Commands
 
 - `qentropyd -c /etc/qentropyd/config.yaml validate-config` — Validate YAML configuration and exit.
-- `qentropyd -c /etc/qentropyd/config.yaml test-sources` — Probe all configured quantum sources.
-- `qentropyd -c /etc/qentropyd/config.yaml self-check --bytes 4096` — Run NIST SP 800-90B + 800-22 self-check.
+- `qentropyd -c /etc/qentropyd/config.yaml test-sources [--json]` — Probe all configured quantum and hardware sources.
+- `qentropyd -c /etc/qentropyd/config.yaml self-check --bytes 4096 [--json]` — Run NIST SP 800-90B + 800-22 self-check.
 - `qentropyd -c /etc/qentropyd/config.yaml run` — Run the daemon in the foreground.
 
 ## Signals

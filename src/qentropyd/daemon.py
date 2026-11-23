@@ -19,6 +19,7 @@ from qentropyd.sink.linux_rng import (
 )
 from qentropyd.sources.anu_api import AnuApiEntropySource
 from qentropyd.sources.base import EntropySource, EntropySourceError
+from qentropyd.sources.hwrng import HardwareDeviceEntropySource
 from qentropyd.sources.mixer import MultiSourceXorMixer
 from qentropyd.sources.qiskit_qrng import QiskitQrngEntropySource
 from qentropyd.validators.health_check import run_nist_800_90b_health_tests
@@ -31,12 +32,17 @@ logger = logging.getLogger("qentropyd")
 
 
 def build_sources(config: QEntropydConfig) -> list[EntropySource]:
-    """Instantiate enabled quantum entropy sources from configuration."""
+    """Instantiate enabled quantum and hardware entropy sources from configuration."""
     sources: list[EntropySource] = []
     if config.anu_api.enabled:
         sources.append(AnuApiEntropySource(config.anu_api))
+    for extra_cfg in config.extra_http_sources:
+        if extra_cfg.enabled:
+            sources.append(AnuApiEntropySource(extra_cfg))
     if config.qiskit_qrng.enabled:
         sources.append(QiskitQrngEntropySource(config.qiskit_qrng))
+    if config.hwrng.enabled:
+        sources.append(HardwareDeviceEntropySource(config.hwrng))
     return sources
 
 
@@ -118,14 +124,15 @@ class QEntropyDaemon:
             logger.error("Failed to reload configuration: %s", exc)
             self._emit_syslog(syslog.LOG_ERR, f"Configuration reload failed: {exc}")
 
-    def _update_kernel_metrics(self) -> None:
+    def _update_kernel_metrics(self) -> int | None:
         try:
             avail = read_kernel_entropy_avail()
             poolsize = read_kernel_poolsize()
             self._metrics.kernel_entropy_avail.set(avail)
             self._metrics.kernel_poolsize.set(poolsize)
+            return avail
         except RngSinkError:
-            pass
+            return None
 
     def _record_source_metrics(self) -> None:
         for name, health in self._mixer.health_status.items():
@@ -266,6 +273,19 @@ class QEntropyDaemon:
                     wait_time = cooldown
                 else:
                     wait_time = self._config.daemon.interval_seconds
+                    avail = self._update_kernel_metrics()
+                    if (
+                        avail is not None
+                        and avail < self._config.daemon.low_entropy_threshold
+                    ):
+                        wait_time = min(wait_time, 1.0)
+                        logger.info(
+                            "Kernel entropy_avail (%d bits) below threshold (%d); "
+                            "accelerating refill interval to %.1fs",
+                            avail,
+                            self._config.daemon.low_entropy_threshold,
+                            wait_time,
+                        )
 
                 with contextlib.suppress(TimeoutError):
                     await asyncio.wait_for(self._stop_event.wait(), timeout=wait_time)

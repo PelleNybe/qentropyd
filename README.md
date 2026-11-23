@@ -5,11 +5,13 @@
 [![Linux Kernel](https://img.shields.io/badge/Linux-5.x%20%7C%206.x-FCC624.svg?logo=linux&logoColor=black)](https://kernel.org/)
 [![NIST SP 800-22 & 800-90B](https://img.shields.io/badge/NIST-SP%20800--22%20%26%20800--90B-0A7E3A.svg)](docs/STATISTICAL_TESTS.md)
 [![Prometheus Metrics](https://img.shields.io/badge/Prometheus-%2Fmetrics-E6522C.svg?logo=prometheus&logoColor=white)](docs/OPERATOR_MANUAL.md)
-[![CI](https://img.shields.io/github/actions/workflow/status/CoraxCoLAB/qentropyd/ci.yml?label=CI)](.github/workflows/ci.yml)
+[![CI](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml/badge.svg)](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml)
 
-**Zero-trust, self-verifying quantum entropy conditioning for Linux servers, HSMs, and edge nodes.**
+**Zero-trust, self-verifying quantum entropy conditioning for Linux servers, HSMs, cloud VMs, and edge nodes.**
 
-`qentropyd` harvests raw bitstreams from independent quantum entropy sources, cryptographically XOR-mixes them, and gates every single batch through **NIST SP 800-90B** continuous health tests and **NIST SP 800-22** statistical tests before a single byte ever reaches `/dev/urandom`. If any test fails, the **fail-closed circuit breaker** immediately discards the batch, alerts `syslog`/`journald`, and exports Prometheus telemetry.
+Modern cryptography fails silently when entropy degrades. `qentropyd` harvests raw random bitstreams from **independent quantum and hardware entropy sources** (optical QRNG APIs, Qiskit $H^{\otimes n}$ quantum circuits, and Linux `/dev/hwrng` devices), cryptographically XOR-mixes them, and gates **every single batch** through **NIST SP 800-90B** continuous health tests and **NIST SP 800-22** statistical tests before a single byte ever reaches `/dev/urandom`.
+
+If any source stalls, drifts, or exhibits periodic bias, the **fail-closed circuit breaker** immediately discards the batch, alerts `syslog`/`journald`, and exports Prometheus telemetry—guaranteeing bad entropy never touches your kernel CSPRNG.
 
 ---
 
@@ -17,8 +19,9 @@
 
 ```mermaid
 flowchart LR
-    S1["Optical QRNG API\n(ANU / LfD TLS)"] --> M["Multi-Source\nXOR Mixer"]
+    S1["Optical QRNG APIs\n(ANU / LfD / Custom TLS)"] --> M["Multi-Source\nXOR Mixer"]
     S2["Qiskit Hadamard QRNG\n(H^n Superposition)"] --> M
+    S3["Hardware TRNG / QRNG\n(/dev/hwrng, USB QRNG)"] --> M
     M --> G1["NIST SP 800-90B\nRCT & APT Gate"]
     G1 -->|PASS| G2["NIST SP 800-22\n5-Test Suite Gate"]
     G1 -->|FAIL| CB["Fail-Closed\nCircuit Breaker"]
@@ -31,13 +34,15 @@ flowchart LR
 
 ---
 
-## Why `qentropyd`?
+## Key Capabilities
 
-- **Cryptographic Defense-in-Depth:** Equal-length bitwise XOR mixing (`MultiSourceXorMixer`) guarantees that as long as *at least one* quantum source is genuine and uncompromised, the mixed stream remains unpredictable.
-- **Mathematical Self-Verification:** Every batch is validated in real time using exact `scipy.special` (`erfc`, `gammaincc`, `binom`) and `numpy.fft` implementations of NIST SP 800-90B and SP 800-22.
-- **Fail-Closed Guarantee:** Compromised, stuck-at-zero, periodic, or biased streams are **never** written to `/dev/urandom`.
-- **Unprivileged by Default (`paranoid` mode):** Stirs `/dev/urandom` under `DynamicUser=yes` with an empty `CapabilityBoundingSet=`. Optional `credit` mode uses `ioctl(RNDADDENTROPY)` with strictly scoped `CAP_SYS_ADMIN`.
-- **Production Observability:** Native Prometheus `/metrics` endpoint, `SIGHUP` hot-reload, and `systemd` journald integration.
+- **Multi-Source Cryptographic XOR Mixing (`MultiSourceXorMixer`):** Combines equal-length byte streams from optical QRNGs, Qiskit quantum circuits, and `/dev/hwrng` hardware devices. By the one-time-pad principle, as long as *at least one* source is genuine and uncompromised, the mixed output remains unpredictable.
+- **No Premature Whitening:** NIST SP 800-90B & SP 800-22 validation runs *prior* to kernel mixing without masking dead hardware behind a hash/PRNG—so stuck-at-zero, periodic, or biased hardware fails loudly.
+- **Fail-Closed Circuit Breaker:** Any statistical or health test failure immediately discards the buffer, increments `qentropyd_batches_rejected_total{reason=...}`, logs to `syslog`/`journald`, and enters exponential backoff / cooldown.
+- **Privilege-Separated Linux Integration:**
+  - **`paranoid` mode (default):** Writes verified bytes directly to `/dev/urandom` under `DynamicUser=yes` with an empty `CapabilityBoundingSet=` (zero capabilities).
+  - **`credit` mode:** Uses `ioctl(RNDADDENTROPY)` (`0x40085203`) with strictly scoped `CAP_SYS_ADMIN` for entropy-starved VMs and embedded boot environments.
+- **Automation & Observability:** Native Prometheus `/metrics` endpoint, `SIGHUP` hot-reload, and `--json` CLI output for CI/CD, Ansible, and monitoring probes.
 
 ---
 
@@ -47,11 +52,13 @@ flowchart LR
 # 1. Install qentropyd
 pip install .
 
-# 2. Run the NIST SP 800-90B & SP 800-22 self-check using Qiskit Hadamard QRNG
+# 2. Run the NIST SP 800-90B & SP 800-22 self-check (human-readable or --json)
 qentropyd self-check --bytes 4096
+qentropyd self-check --bytes 4096 --json
 
-# 3. Validate a production configuration
+# 3. Validate production configuration & probe configured sources
 qentropyd -c systemd/qentropyd.example.yaml validate-config
+qentropyd -c systemd/qentropyd.example.yaml test-sources
 
 # 4. Run the daemon
 qentropyd -c systemd/qentropyd.example.yaml run

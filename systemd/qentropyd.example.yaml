@@ -15,6 +15,14 @@ anu_api:
   base_backoff_seconds: 1.0
   max_backoff_seconds: 60.0
 
+# Optional additional HTTP/TLS QRNG endpoints (e.g., LfD QRNG or local hardware QRNG)
+extra_http_sources: []
+#  - enabled: true
+#    name: lfd_optical_qrng
+#    endpoint_url: https://lfdr.de/qrng_api/qrng
+#    response_format: lfd_hex
+#    timeout_seconds: 10.0
+
 qiskit_qrng:
   enabled: true
   name: qiskit_hadamard_qrng
@@ -23,6 +31,13 @@ qiskit_qrng:
   remote_url: null
   api_token: null
   timeout_seconds: 30.0
+
+# Optional Linux hardware TRNG/QRNG character device (/dev/hwrng, USB QRNG)
+hwrng:
+  enabled: false
+  name: linux_hwrng
+  device_path: /dev/hwrng
+  timeout_seconds: 5.0
 
 mixer:
   # Require at least 2 independent healthy quantum sources before XOR mixing

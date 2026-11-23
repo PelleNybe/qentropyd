@@ -5,8 +5,9 @@
 ## Component Architecture
 
 1. **Asynchronous Entropy Sources (`src/qentropyd/sources/`)**
-   - `AnuApiEntropySource`: Async `httpx` client supporting TLS-verified optical QRNG endpoints (ANU `jsonI.php`, LfD hex, generic JSON hex/uint8) with exponential backoff and jitter on HTTP 429/5xx or transport errors.
+   - `AnuApiEntropySource`: Async `httpx` client supporting TLS-verified optical QRNG endpoints (ANU `jsonI.php`, LfD hex, generic JSON hex/uint8) with exponential backoff and jitter on HTTP 429/5xx or transport errors. Multiple endpoints can be configured via `extra_http_sources`.
    - `QiskitQrngEntropySource`: Constructs an $n$-qubit Hadamard circuit ($H^{\otimes n}$) followed by computational-basis measurement using `qiskit` and `qiskit-aer` (or a configurable remote quantum REST endpoint).
+   - `HardwareDeviceEntropySource`: Async reader for Linux hardware TRNG/QRNG character devices (`/dev/hwrng`, USB QRNGs) with bounded read timeouts.
 2. **Multi-Source Cryptographic XOR Mixer (`src/qentropyd/sources/mixer.py`)**
    - Concurrently fetches equal-length byte streams via `asyncio.gather`.
    - Computes $Y = S_1 \oplus S_2 \oplus \dots \oplus S_k$ using `numpy` uint8 vectorized bitwise XOR.

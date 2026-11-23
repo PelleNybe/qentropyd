@@ -65,10 +65,10 @@ dev = [
 qentropyd = "qentropyd.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/CoraxCoLAB/qentropyd"
-Documentation = "https://github.com/CoraxCoLAB/qentropyd/tree/main/docs"
-Repository = "https://github.com/CoraxCoLAB/qentropyd"
-Issues = "https://github.com/CoraxCoLAB/qentropyd/issues"
+Homepage = "https://github.com/PelleNybe/qentropyd"
+Documentation = "https://github.com/PelleNybe/qentropyd/tree/main/docs"
+Repository = "https://github.com/PelleNybe/qentropyd"
+Issues = "https://github.com/PelleNybe/qentropyd/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

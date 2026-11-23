@@ -131,7 +131,8 @@ class AnuApiEntropySource(EntropySource):
                 raw_hex = "".join(str(item) for item in raw_hex)
             if not isinstance(raw_hex, str):
                 raise ValueError("QRNG hex payload missing string field")
-            parsed = bytes.fromhex(raw_hex.strip())
+            cleaned_hex = raw_hex.strip().removeprefix("0x").removeprefix("0X")
+            parsed = bytes.fromhex(cleaned_hex)
             if len(parsed) < expected_len:
                 raise ValueError(
                     f"QRNG hex payload too short: {len(parsed)} < {expected_len}"
