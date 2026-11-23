@@ -1,0 +1,51 @@
+[Unit]
+Description=qentropyd - Self-Verifying Quantum Entropy Daemon (Paranoid Mode)
+Documentation=https://github.com/CoraxCoLAB/qentropyd
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/qentropyd -c /etc/qentropyd/config.yaml run
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+# Unprivileged Execution (Paranoid Mode writes to /dev/urandom without crediting)
+DynamicUser=yes
+Environment=QENTROPYD_SINK_MODE=paranoid
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Filesystem & Kernel Isolation
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=false
+DevicePolicy=closed
+DeviceAllow=/dev/urandom rw
+ReadOnlyPaths=/etc/qentropyd
+
+# Process, Memory & Syscall Hardening
+MemoryDenyWriteExecute=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @mount @reboot @swap @obsolete
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qentropyd
+
+[Install]
+WantedBy=multi-user.target

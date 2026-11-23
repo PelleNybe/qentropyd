@@ -1,0 +1,51 @@
+[Unit]
+Description=qentropyd - Self-Verifying Quantum Entropy Daemon (Kernel Credit Mode)
+Documentation=https://github.com/CoraxCoLAB/qentropyd
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/qentropyd -c /etc/qentropyd/config.yaml run
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+# Minimal Privilege Separation (CAP_SYS_ADMIN strictly for ioctl RNDADDENTROPY)
+DynamicUser=yes
+Environment=QENTROPYD_SINK_MODE=credit
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_SYS_ADMIN
+AmbientCapabilities=CAP_SYS_ADMIN
+
+# Filesystem & Kernel Isolation
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=false
+DevicePolicy=closed
+DeviceAllow=/dev/urandom rw
+ReadOnlyPaths=/etc/qentropyd
+
+# Process, Memory & Syscall Hardening
+MemoryDenyWriteExecute=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@mount @reboot @swap @obsolete
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qentropyd-credit
+
+[Install]
+WantedBy=multi-user.target

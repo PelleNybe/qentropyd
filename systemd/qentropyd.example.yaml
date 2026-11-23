@@ -1,0 +1,60 @@
+# Production configuration template for qentropyd
+# Install to /etc/qentropyd/config.yaml
+
+anu_api:
+  enabled: true
+  name: anu_optical_qrng
+  endpoint_url: https://qrng.anu.edu.au/API/jsonI.php
+  response_format: anu_v1
+  # Optional API key (or set QENTROPYD_ANU_API_KEY in environment)
+  api_key: null
+  api_key_header: x-api-key
+  timeout_seconds: 10.0
+  verify_tls: true
+  max_retries: 3
+  base_backoff_seconds: 1.0
+  max_backoff_seconds: 60.0
+
+qiskit_qrng:
+  enabled: true
+  name: qiskit_hadamard_qrng
+  num_qubits: 16
+  backend_type: aer_simulator
+  remote_url: null
+  api_token: null
+  timeout_seconds: 30.0
+
+mixer:
+  # Require at least 2 independent healthy quantum sources before XOR mixing
+  min_healthy_sources: 2
+  # 4096 bytes = 32,768 bits per validated batch
+  batch_bytes: 4096
+
+nist_800_22:
+  significance_level: 0.01
+  block_frequency_m: 128
+
+nist_800_90b:
+  min_entropy_bits_per_byte: 4.0
+  alpha_90b: 0.00000095367431640625  # 2^-20
+  apt_window_size: 512
+  enable_bit_rct: true
+
+sink:
+  # "paranoid" (unprivileged write to /dev/urandom) or "credit" (ioctl RNDADDENTROPY)
+  mode: paranoid
+  device_path: /dev/urandom
+  # Conservative credit rate when mode=credit (bits credited per injected byte)
+  credit_bits_per_byte: 0.5
+
+metrics:
+  enabled: true
+  host: 127.0.0.1
+  port: 9108
+
+daemon:
+  interval_seconds: 10.0
+  low_entropy_threshold: 1024
+  circuit_breaker_threshold: 3
+  circuit_breaker_cooldown_seconds: 60.0
+  log_to_syslog: true
