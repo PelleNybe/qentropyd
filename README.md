@@ -128,6 +128,7 @@ qentropyd_kernel_entropy_avail_bits 256.0
 - [Statistical &amp; Health Tests](docs/STATISTICAL_TESTS.md)
 - [Security Hardening Guide](docs/SECURITY_HARDENING.md)
 - [Operator Manual](docs/OPERATOR_MANUAL.md)
+- [Grafana Dashboard](deploy/grafana/qentropyd-dashboard.json) &bull; [Prometheus Alert Rules](deploy/prometheus/qentropyd-alerts.yml)
 - [Security Policy](SECURITY.md) &bull; [Contributing](CONTRIBUTING.md) &bull; [Changelog](CHANGELOG.md)
 
 ---

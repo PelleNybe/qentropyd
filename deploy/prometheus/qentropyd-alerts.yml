@@ -1,0 +1,35 @@
+groups:
+  - name: qentropyd
+    rules:
+      - alert: QEntropydCircuitBreakerOpen
+        expr: qentropyd_circuit_breaker_open == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "qentropyd fail-closed circuit breaker is OPEN on {{ $labels.instance }}"
+          description: >-
+            Consecutive entropy validation or source acquisition failures tripped the
+            qentropyd circuit breaker. No quantum entropy is being injected into /dev/urandom.
+
+      - alert: QEntropydBatchRejectionSpike
+        expr: increase(qentropyd_batches_rejected_total[10m]) >= 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "qentropyd rejected >= 3 batches in 10m ({{ $labels.reason }})"
+          description: >-
+            NIST SP 800-90B or SP 800-22 rejected candidate entropy on {{ $labels.instance }}
+            due to {{ $labels.reason }}.
+
+      - alert: QEntropydSourceErrors
+        expr: increase(qentropyd_source_errors_total[15m]) >= 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "qentropyd entropy source {{ $labels.source }} experiencing errors"
+          description: >-
+            Source {{ $labels.source }} on {{ $labels.instance }} has logged >= 5 fetch errors
+            in the last 15 minutes.

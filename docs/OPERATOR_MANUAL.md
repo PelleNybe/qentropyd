@@ -36,3 +36,8 @@ Inspect logs via:
 ```bash
 journalctl -u qentropyd -f
 ```
+
+## Grafana Dashboard & Alert Rules
+
+- **Grafana:** Import `deploy/grafana/qentropyd-dashboard.json` in Grafana (**Dashboards -> New -> Import**) and select your Prometheus datasource.
+- **Prometheus Alerts:** Load `deploy/prometheus/qentropyd-alerts.yml` in your Prometheus `rule_files:` configuration to alert on `QEntropydCircuitBreakerOpen`, `QEntropydBatchRejectionSpike`, and `QEntropydSourceErrors`.
