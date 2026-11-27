@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 150" width="100%" role="img" aria-label="qentropyd Quantum Entropy Pipeline">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#131c33"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="920" height="150" rx="12" fill="url(#bg)" stroke="#1e293b" stroke-width="1.5"/>
+
+  <!-- Pipeline connection track -->
+  <line x1="120" y1="75" x2="800" y2="75" stroke="#1e293b" stroke-width="3"/>
+  <line x1="120" y1="75" x2="800" y2="75" stroke="url(#pulse)" stroke-width="3" stroke-dasharray="140 540">
+    <animate attributeName="stroke-dashoffset" from="680" to="0" dur="3.2s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Traveling quantum bit packet -->
+  <circle cx="120" cy="75" r="4.5" fill="#38bdf8" filter="url(#glow)">
+    <animate attributeName="cx" values="120;340;570;800" dur="3.2s" repeatCount="indefinite"/>
+    <animate attributeName="fill" values="#38bdf8;#a855f7;#22c55e;#22c55e" dur="3.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Node 1: Quantum Sources -->
+  <g transform="translate(45, 42)">
+    <rect width="150" height="66" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="75" y="28" text-anchor="middle" fill="#e2e8f0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700">QRNG SOURCES</text>
+    <text x="75" y="47" text-anchor="middle" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Optical · Qiskit · HWRNG</text>
+  </g>
+
+  <!-- Node 2: XOR Mixer -->
+  <g transform="translate(265, 42)">
+    <rect width="150" height="66" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="75" y="28" text-anchor="middle" fill="#e2e8f0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700">XOR MIXER</text>
+    <text x="75" y="47" text-anchor="middle" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Multi-Source Defense</text>
+  </g>
+
+  <!-- Node 3: NIST Gate -->
+  <g transform="translate(495, 42)">
+    <rect width="160" height="66" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="80" y="28" text-anchor="middle" fill="#e2e8f0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700">NIST 800-90B / 22</text>
+    <text x="80" y="47" text-anchor="middle" fill="#94a3b8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Fail-Closed Circuit Breaker</text>
+  </g>
+
+  <!-- Node 4: /dev/urandom -->
+  <g transform="translate(725, 42)">
+    <rect width="150" height="66" rx="8" fill="#0f172a" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="75" y="28" text-anchor="middle" fill="#e2e8f0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="700">/dev/urandom</text>
+    <text x="75" y="47" text-anchor="middle" fill="#86efac" font-family="ui-sans-serif, system-ui, sans-serif" font-size="10">Verified Kernel CSPRNG</text>
+  </g>
+</svg>

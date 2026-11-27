@@ -12,12 +12,40 @@
       }
     ]
   },
-  "description": "Self-Verifying Quantum Entropy Daemon (qentropyd) observability dashboard by Corax CoLAB",
+  "description": "Self-Verifying Quantum Entropy Daemon (qentropyd) observability dashboard — Corax CoLAB (https://coraxcolab.com) | Lead Developer: Pelle Nyberg (@PelleNybe)",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Corax CoLAB",
+      "tooltip": "Corax CoLAB — Deep Tech, Edge AI & Linux Security",
+      "type": "link",
+      "url": "https://coraxcolab.com"
+    },
+    {
+      "icon": "external link",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Developer (@PelleNybe)",
+      "tooltip": "Pelle Nyberg on GitHub",
+      "type": "link",
+      "url": "https://github.com/PelleNybe"
+    },
+    {
+      "icon": "heart",
+      "tags": [],
+      "targetBlank": true,
+      "title": "Support qentropyd",
+      "tooltip": "Buy Me a Coffee",
+      "type": "link",
+      "url": "https://buymeacoffee.com/pellenybe"
+    }
+  ],
   "panels": [
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },

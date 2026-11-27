@@ -1,52 +1,64 @@
-# `qentropyd` — Self-Verifying Quantum Entropy Daemon for Linux
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Linux Kernel](https://img.shields.io/badge/Linux-5.x%20%7C%206.x-FCC624.svg?logo=linux&logoColor=black)](https://kernel.org/)
-[![NIST SP 800-22 & 800-90B](https://img.shields.io/badge/NIST-SP%20800--22%20%26%20800--90B-0A7E3A.svg)](docs/STATISTICAL_TESTS.md)
-[![Prometheus Metrics](https://img.shields.io/badge/Prometheus-%2Fmetrics-E6522C.svg?logo=prometheus&logoColor=white)](docs/OPERATOR_MANUAL.md)
-[![CI](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml/badge.svg)](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml)
+# ⚛️ `qentropyd`
+
+### Self-Verifying Quantum Entropy Daemon for Linux
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Linux Kernel](https://img.shields.io/badge/Linux-5.x%20%7C%206.x-FCC624.svg?style=for-the-badge&logo=linux&logoColor=black)](https://kernel.org/)
+[![NIST SP 800-22 & 800-90B](https://img.shields.io/badge/NIST-SP%20800--22%20%26%20800--90B-0A7E3A.svg?style=for-the-badge)](docs/STATISTICAL_TESTS.md)
+[![Prometheus](https://img.shields.io/badge/Prometheus-%2Fmetrics-E6522C.svg?style=for-the-badge&logo=prometheus&logoColor=white)](docs/OPERATOR_MANUAL.md)
+[![CI](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/PelleNybe/qentropyd/actions/workflows/ci.yml)
+
+[![Corax CoLAB](https://img.shields.io/badge/Built%20by-Corax%20CoLAB-111827.svg?style=for-the-badge)](https://coraxcolab.com)
+[![Sponsor on Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Development-FFDD00.svg?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/pellenybe)
 
 **Zero-trust, self-verifying quantum entropy conditioning for Linux servers, HSMs, cloud VMs, and edge nodes.**
 
-Modern cryptography fails silently when entropy degrades. `qentropyd` harvests raw random bitstreams from **independent quantum and hardware entropy sources** (optical QRNG APIs, Qiskit $H^{\otimes n}$ quantum circuits, and Linux `/dev/hwrng` devices), cryptographically XOR-mixes them, and gates **every single batch** through **NIST SP 800-90B** continuous health tests and **NIST SP 800-22** statistical tests before a single byte ever reaches `/dev/urandom`.
+<br/>
 
-If any source stalls, drifts, or exhibits periodic bias, the **fail-closed circuit breaker** immediately discards the batch, alerts `syslog`/`journald`, and exports Prometheus telemetry—guaranteeing bad entropy never touches your kernel CSPRNG.
+<img src="docs/assets/qentropyd-pulse.svg" alt="qentropyd animated quantum entropy pipeline" width="100%"/>
+
+</div>
 
 ---
 
-## Architecture & Dataflow
+## 🛡️ Why `qentropyd`?
+
+Modern cryptography fails silently when entropy degrades. Virtualized cloud instances, headless edge nodes, and embedded appliances often boot with starved or predictable randomness.
+
+`qentropyd` solves this with **cryptographic defense-in-depth**:
+
+- ⚛️ **Independent Quantum & Hardware Sources:** Harvests raw bitstreams from TLS-verified optical QRNG APIs (ANU, LfD, custom endpoints), Qiskit Hadamard-gate ($H^{\otimes n}$) quantum circuits, and Linux hardware TRNG/QRNG character devices (`/dev/hwrng`, USB QRNGs).
+- 🔀 **Multi-Source Cryptographic XOR Mixing:** Combines equal-length streams via `MultiSourceXorMixer`. By the one-time-pad principle, as long as **at least one** source is genuine and uncompromised, the mixed output remains unpredictable.
+- 🧪 **Real-Time NIST Self-Verification (No Premature Whitening):** Every batch is gated through **NIST SP 800-90B** continuous health tests and **NIST SP 800-22** statistical tests *before* touching `/dev/urandom`—without masking dead hardware behind a PRNG or hash.
+- ⚡ **Fail-Closed Circuit Breaker:** Any stuck-at-zero, periodic, or biased stream is immediately discarded, logged to `syslog`/`journald`, and tracked via Prometheus—never reaching your kernel CSPRNG.
+- 🔒 **Privilege-Separated `systemd` Hardening:** Runs unprivileged by default in `paranoid` mode (`DynamicUser=yes`, empty `CapabilityBoundingSet=`), with an optional `credit` mode (`CAP_SYS_ADMIN` only) for `ioctl(RNDADDENTROPY)`.
+- 📊 **Production Observability:** Native Prometheus `/metrics` endpoint, pre-built Grafana dashboard, alert rules, `SIGHUP` hot-reload, and `--json` CLI probes.
+
+---
+
+## 🧭 Architecture & Dataflow
 
 ```mermaid
 flowchart LR
-    S1["Optical QRNG APIs\n(ANU / LfD / Custom TLS)"] --> M["Multi-Source\nXOR Mixer"]
-    S2["Qiskit Hadamard QRNG\n(H^n Superposition)"] --> M
-    S3["Hardware TRNG / QRNG\n(/dev/hwrng, USB QRNG)"] --> M
-    M --> G1["NIST SP 800-90B\nRCT & APT Gate"]
-    G1 -->|PASS| G2["NIST SP 800-22\n5-Test Suite Gate"]
-    G1 -->|FAIL| CB["Fail-Closed\nCircuit Breaker"]
+    S1["🌐 Optical QRNG APIs\n(ANU / LfD / Custom TLS)"] --> M["🔀 Multi-Source\nXOR Mixer"]
+    S2["⚛️ Qiskit Hadamard QRNG\n(H^n Superposition)"] --> M
+    S3["🔌 Hardware TRNG / QRNG\n(/dev/hwrng, USB QRNG)"] --> M
+    M --> G1["🩺 NIST SP 800-90B\nRCT & APT Gate"]
+    G1 -->|PASS| G2["🧪 NIST SP 800-22\n5-Test Suite Gate"]
+    G1 -->|FAIL| CB["⚡ Fail-Closed\nCircuit Breaker"]
     G2 -->|FAIL| CB
-    CB --> LOG["syslog / journald\n+ Rejection Metrics"]
-    G2 -->|PASS| SINK["Linux RNG Sink\n(paranoid / ioctl)"]
-    SINK --> URAND["/dev/urandom\nKernel CSPRNG"]
-    G2 --> PROM["Prometheus\n/metrics"]
+    CB --> LOG["📜 syslog / journald\n+ Rejection Metrics"]
+    G2 -->|PASS| SINK["🔒 Linux RNG Sink\n(paranoid / ioctl)"]
+    SINK --> URAND["🐧 /dev/urandom\nKernel CSPRNG"]
+    G2 --> PROM["📊 Prometheus /metrics\n& Grafana Dashboard"]
 ```
 
 ---
 
-## Key Capabilities
-
-- **Multi-Source Cryptographic XOR Mixing (`MultiSourceXorMixer`):** Combines equal-length byte streams from optical QRNGs, Qiskit quantum circuits, and `/dev/hwrng` hardware devices. By the one-time-pad principle, as long as *at least one* source is genuine and uncompromised, the mixed output remains unpredictable.
-- **No Premature Whitening:** NIST SP 800-90B & SP 800-22 validation runs *prior* to kernel mixing without masking dead hardware behind a hash/PRNG—so stuck-at-zero, periodic, or biased hardware fails loudly.
-- **Fail-Closed Circuit Breaker:** Any statistical or health test failure immediately discards the buffer, increments `qentropyd_batches_rejected_total{reason=...}`, logs to `syslog`/`journald`, and enters exponential backoff / cooldown.
-- **Privilege-Separated Linux Integration:**
-  - **`paranoid` mode (default):** Writes verified bytes directly to `/dev/urandom` under `DynamicUser=yes` with an empty `CapabilityBoundingSet=` (zero capabilities).
-  - **`credit` mode:** Uses `ioctl(RNDADDENTROPY)` (`0x40085203`) with strictly scoped `CAP_SYS_ADMIN` for entropy-starved VMs and embedded boot environments.
-- **Automation & Observability:** Native Prometheus `/metrics` endpoint, `SIGHUP` hot-reload, and `--json` CLI output for CI/CD, Ansible, and monitoring probes.
-
----
-
-## Quickstart
+## ⚡ Quickstart
 
 ```bash
 # 1. Install qentropyd
@@ -66,10 +78,10 @@ qentropyd -c systemd/qentropyd.example.yaml run
 
 ---
 
-## Deep Dive
+## 🔍 Interactive Deep Dive
 
 <details>
-<summary><strong>Implemented NIST SP 800-22 &amp; SP 800-90B Tests &amp; Thresholds</strong></summary>
+<summary>🧪 <strong>Implemented NIST SP 800-22 &amp; SP 800-90B Tests &amp; Thresholds</strong></summary>
 
 | Standard | Test | Purpose | Default Threshold |
 | :--- | :--- | :--- | :--- |
@@ -84,7 +96,7 @@ qentropyd -c systemd/qentropyd.example.yaml run
 </details>
 
 <details>
-<summary><strong>systemd Sandboxing &amp; Privilege Separation</strong></summary>
+<summary>🔒 <strong>systemd Sandboxing &amp; Privilege Separation</strong></summary>
 
 - **`systemd/qentropyd.service` (Default Paranoid Mode):**
   - `DynamicUser=yes`, `CapabilityBoundingSet=` (zero capabilities), `NoNewPrivileges=yes`
@@ -97,7 +109,7 @@ qentropyd -c systemd/qentropyd.example.yaml run
 </details>
 
 <details>
-<summary><strong>Sample Prometheus <code>/metrics</code> Output</strong></summary>
+<summary>📊 <strong>Sample Prometheus <code>/metrics</code> Output &amp; Grafana Integration</strong></summary>
 
 ```prometheus
 # HELP qentropyd_batches_accepted_total Total number of entropy batches passing all NIST SP 800-90B and 800-22 gates
@@ -118,24 +130,42 @@ qentropyd_nist_p_value{test_name="fft_spectral"} 0.812440
 qentropyd_kernel_entropy_avail_bits 256.0
 ```
 
+Import [deploy/grafana/qentropyd-dashboard.json](deploy/grafana/qentropyd-dashboard.json) into Grafana and load [deploy/prometheus/qentropyd-alerts.yml](deploy/prometheus/qentropyd-alerts.yml) in Prometheus for out-of-the-box dashboards and circuit-breaker alerts.
+
 </details>
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [Statistical &amp; Health Tests](docs/STATISTICAL_TESTS.md)
-- [Security Hardening Guide](docs/SECURITY_HARDENING.md)
-- [Operator Manual](docs/OPERATOR_MANUAL.md)
-- [Grafana Dashboard](deploy/grafana/qentropyd-dashboard.json) &bull; [Prometheus Alert Rules](deploy/prometheus/qentropyd-alerts.yml)
-- [Security Policy](SECURITY.md) &bull; [Contributing](CONTRIBUTING.md) &bull; [Changelog](CHANGELOG.md)
+- 🏗️ [Architecture Overview](docs/ARCHITECTURE.md)
+- 🧪 [Statistical &amp; Health Tests](docs/STATISTICAL_TESTS.md)
+- 🔒 [Security Hardening Guide](docs/SECURITY_HARDENING.md)
+- 📖 [Operator Manual](docs/OPERATOR_MANUAL.md)
+- 📊 [Grafana Dashboard](deploy/grafana/qentropyd-dashboard.json) &bull; 🚨 [Prometheus Alert Rules](deploy/prometheus/qentropyd-alerts.yml)
+- 🛡️ [Security Policy](SECURITY.md) &bull; 🤝 [Contributing](CONTRIBUTING.md) &bull; 📝 [Changelog](CHANGELOG.md)
 
 ---
 
-## Creators &amp; Credits
+## 🙏 Creators, Credits &amp; Acknowledgments
 
-- **Organization:** [Corax CoLAB](https://coraxcolab.com/) — Deep Tech, Edge AI &amp; Linux Security Engineering.
-- **Lead Developer:** Pelle Nyberg ([GitHub: @PelleNybe](https://github.com/PelleNybe)).
+`qentropyd` is engineered and maintained by:
 
-Licensed under the [MIT License](LICENSE).
+- **Organization:** [**Corax CoLAB**](https://coraxcolab.com) — Deep Tech, Edge AI &amp; Linux Security Engineering.
+- **Lead Developer:** **Pelle Nyberg** ([GitHub: @PelleNybe](https://github.com/PelleNybe)).
+
+### ☕ Support This Project
+
+If `qentropyd` strengthens your infrastructure or research, consider supporting ongoing open-source security engineering:
+
+<a href="https://buymeacoffee.com/pellenybe" target="_blank">
+  <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-buymeacoffee.com%2Fpellenybe-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
+</a>
+
+---
+
+<div align="center">
+
+Licensed under the [MIT License](LICENSE) &bull; Built with ⚛️ by [Corax CoLAB](https://coraxcolab.com)
+
+</div>
